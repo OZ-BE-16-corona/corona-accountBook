@@ -216,3 +216,55 @@ Access Token을 생성한 뒤 검증 후 Pass
 Refresh Token이 만료되었거나 검증되지 못하면
 로그인을 요청해 Refresh Toekn을 재발급받게 한다.
 
+## 테이블 구성
+
+| 테이블 이름 | 설명 | 주요 필드 |
+|-------------|------|------------|
+| User | 사용자의 기본 계정 정보를 관리하는 테이블입니다. | user_id (PK), user_name, email, password_hash, is_admin, created_at, updated_at |
+| Account | 유저가 보유한 계좌 정보를 저장합니다. | account_id (PK), account_name, type, bank_code, balance, is_active, created_at, updated_at |
+| Transaction | 계좌의 개별 거래 내역을 저장합니다. | transaction_id (PK), amount, currency, transaction_type, memo, transaction_date, created_at, updated_at |
+| Notification | 시스템 및 이벤트 알림을 관리합니다. | notification_id (PK), title, content, notification_type, is_read, created_at, updated_at, read_at |
+| Schedule | 반복되는 정기 거래를 관리합니다. | schedule_id (PK), title, amount, currency, transaction_type, memo, repeat_type, start_date, end_date, is_active, created_at, updated_at |
+| Category | 수입 및 지출 항목을 분류합니다. | category_id (PK), category_name, created_at, updated_at |
+
+---
+
+# 1. 사용자 인증 설계 (Mission 1)
+
+## 인증 방식
+
+- 인증 방식 : **JWT 기반 인증**
+- 로그인 성공 시 Access Token 발급
+- 이후 요청은 `Authorization: Bearer <access_token>` 방식으로 인증
+- 로그아웃 시 클라이언트에서 토큰을 삭제
+
+※ 현재 ERD 구조상 서버는 토큰을 별도로 저장하지 않으므로  
+로그아웃은 클라이언트 측 토큰 삭제 방식으로 처리합니다.
+
+---
+
+## 인증 플로우차트
+
+```mermaid
+flowchart TD
+    S([Start]) --> A{사용자 행동 선택}
+
+    A -->|회원가입| R1[회원가입 요청]
+    R1 --> R2{이메일 중복 확인}
+    R2 -->|중복| R_FAIL[회원가입 실패] --> E([End])
+    R2 -->|정상| R3[비밀번호 해시 처리]
+    R3 --> R4[User 테이블 저장]
+    R4 --> R_OK[회원가입 성공] --> E
+
+    A -->|로그인| L1[로그인 요청]
+    L1 --> L2{이메일 존재 여부}
+    L2 -->|없음| L_FAIL[로그인 실패] --> E
+    L2 -->|존재| L3[비밀번호 검증]
+    L3 --> L4{비밀번호 일치}
+    L4 -->|불일치| L_FAIL --> E
+    L4 -->|일치| L5[JWT 발급]
+    L5 --> L_OK[로그인 성공] --> E
+
+    A -->|로그아웃| O1[클라이언트 토큰 삭제]
+    O1 --> O2[서버 성공 응답]
+    O2 --> E
