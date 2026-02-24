@@ -128,7 +128,9 @@ INSTALLED_APPS += [
     "drf_spectacular",
     "user",
     "notification",
-    "schedule"
+    "schedule",
+    "category",
+    "account"
 ]
 
 REST_FRAMEWORK = {
