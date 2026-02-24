@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+from django.contrib.auth import authenticate
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -27,3 +28,37 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
+
+        user = authenticate(email=email, password=password)
+        if not user:
+            raise serializers.ValidationError(
+                "이메일 또는 비밀번호가 올바르지 않습니다."
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError("이메일 인증이 필요합니다.")
+
+        attrs["user"] = user
+        return attrs
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("user_id", "email", "user_name", "created_at", "updated_at")
+        read_only_fields = ("user_id", "email", "created_at", "updated_at")
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("user_name",)
