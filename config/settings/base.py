@@ -130,7 +130,8 @@ INSTALLED_APPS += [
     "notification",
     "schedule",
     "category",
-    "account"
+    "account",
+    "transaction"
 ]
 
 REST_FRAMEWORK = {
