@@ -203,5 +203,16 @@ Notification 테이블은 사용자별 읽음 상태(is_read, read_at)를 관리
 - 하나의 카테고리는 여러 개의 정기 스케줄에 사용될 수 있다. (0개의 스케쥴 사용 가능)
 
 
+# 3. JWT 인증 로그인
+![img.png](img.png)
 
+Refresh Token으로만 Access Token 생성이 가능하고
+
+Access Token이 검증되면 Pass,
+
+Refresh Token이 검증되면 Refresh Token으로
+Access Token을 생성한 뒤 검증 후 Pass
+
+Refresh Token이 만료되었거나 검증되지 못하면
+로그인을 요청해 Refresh Toekn을 재발급받게 한다.
 
