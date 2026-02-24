@@ -234,8 +234,6 @@ Notification 테이블은 사용자별 읽음 상태(is_read, read_at)를 관리
 
 ## 인증 플로우차트
 
-## 🔄 인증 플로우차트
-
 ```mermaid
 flowchart TD
     S([Start]) --> A{사용자 행동 선택}
