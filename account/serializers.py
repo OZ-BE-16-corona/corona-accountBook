@@ -8,5 +8,5 @@ class AccountSerializer(serializers.ModelSerializer):
             'account_id', 'account_name', 'type', 'bank_code', 
             'currency', 'balance', 'is_active', 'created_at'
         ]
-        # balance는 거래(Transaction)를 통해서만 변경되어야 하므로 읽기 전용 권장
+
         read_only_fields = ['account_id', 'balance', 'is_active', 'created_at']
