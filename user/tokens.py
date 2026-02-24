@@ -1,4 +1,4 @@
-from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.core.signing import TimestampSigner
 
 _signer = TimestampSigner(salt="user-email-verify")
 
