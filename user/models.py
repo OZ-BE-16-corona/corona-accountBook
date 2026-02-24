@@ -42,7 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_admin = models.BooleanField(default=False)
 
     # Django 운영용 (권장)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
     # ERD: created_at / updated_at
