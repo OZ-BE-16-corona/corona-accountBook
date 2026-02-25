@@ -134,6 +134,7 @@ INSTALLED_APPS += [
     "schedule",
     "category",
     "account",
+    "analysis",
     "transaction",
     "rest_framework_simplejwt.token_blacklist",
 ]
@@ -166,3 +167,6 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "user_id",
     "USER_ID_CLAIM": "user_id",
 }
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
