@@ -25,6 +25,8 @@ urlpatterns = [
 
     path('api/accounts/', include('account.urls')),
 
+    path('api/transactions/', include('transaction.urls')),
+
     # ✅ auth (mission_2)
     path("api/auth/", include("user.urls")),
 ]
