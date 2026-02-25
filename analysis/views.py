@@ -1,14 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from datetime import datetime
 
+from analysis.models import Analysis
 from analysis.services import AnalysisService
+from analysis.serializers import AnalysisListSerializer
 
 
 class AnalysisCreateView(APIView):
     permission_classes = [IsAuthenticated]
+    # ❌ serializer_class 삭제 (APIView에서는 의미 없음)
 
     def post(self, request):
         about = request.data.get("about")
@@ -17,7 +21,6 @@ class AnalysisCreateView(APIView):
         period_end = request.data.get("period_end")
         description = request.data.get("description", "")
 
-        # 🔥 필수값 체크
         if not all([about, type_, period_start, period_end]):
             return Response(
                 {"detail": "about, type, period_start, period_end는 필수입니다."},
@@ -57,3 +60,28 @@ class AnalysisCreateView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class AnalysisListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AnalysisListSerializer
+
+    def get_queryset(self):
+        qs = Analysis.objects.filter(user=self.request.user).order_by("-created_at")
+
+        type_param = self.request.query_params.get("type")
+        if type_param:
+            qs = qs.filter(type=type_param)
+
+        about_param = self.request.query_params.get("about")
+        if about_param:
+            qs = qs.filter(about=about_param)
+
+        start = self.request.query_params.get("start")  # YYYY-MM-DD
+        end = self.request.query_params.get("end")  # YYYY-MM-DD
+        if start:
+            qs = qs.filter(period_start__gte=start)
+        if end:
+            qs = qs.filter(period_end__lte=end)
+
+        return qs
