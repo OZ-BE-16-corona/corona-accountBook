@@ -229,7 +229,7 @@ Refresh Token이 만료되었거나 검증되지 못하면
 
 ---
 
-# 1. 사용자 인증 설계 (Mission 1)
+# 4. 사용자 인증 설계 (Mission 1)
 
 ## 인증 방식
 
@@ -269,3 +269,64 @@ flowchart TD
     A -->|로그아웃| O1[클라이언트 토큰 삭제]
     O1 --> O2[서버 성공 응답]
     O2 --> E
+
+app.task vs shared_task 차이 (핵심만)
+
+@app.task
+
+특정 Celery 앱 인스턴스(celery_app)에 직접 등록됨.
+
+프로젝트가 “앱 인스턴스 1개”로 고정이고, 명시적으로 관리하고 싶을 때 좋음.
+
+@shared_task
+
+“현재 로딩된 Celery 앱”에 자동으로 붙는 재사용 가능한 task.
+
+Django에서 autodiscover_tasks()랑 궁합이 좋아서, 각 앱(analysis/tasks.py)에 task 넣기 편함.
+
+그래서 보통 Django 프로젝트에서는 shared_task를 더 많이 씀.
+
+이번 미션처럼 “analysis 앱에 tasks.py 만들어서 자동 등록”이 목표면 shared_task가 적합.
+
+1. @app.task = "A회사 전속 계약 직원"
+이 직원은 **"나는 무조건 A회사(특정 Celery 앱)에서만 일할 거야!"**라고 도장을 찍은 직원입니다.
+
+특징: 소속이 아주 명확합니다.
+
+아쉬운 점: 만약 이 직원이 하는 일(코드)을 그대로 복사해서 다른 B회사(다른 프로젝트)로 가져가면? 직원은 "A회사 아니면 일 안 해요!"라며 파업(에러)을 일으킵니다. 앱이 하나뿐인 아주 단순한 구조일 때만 쓰기 좋습니다.
+
+2. @shared_task = "능력 있는 프리랜서 (공용 직원)"  (Django 필수!)
+이 직원은 **"어느 회사든, 지금 문 열고 영업 중인 곳(현재 로딩된 Celery 앱)이면 어디서든 일할 수 있습니다!"**라고 하는 아주 유연한 직원입니다.
+
+특징: 소속을 딱히 따지지 않아서 재사용하기가 엄청나게 좋습니다.
+
+Django와 찰떡인 이유:
+Django는 하나의 큰 프로젝트 안에 여러 개의 작은 앱(users, analysis, payments 등)이 모여있는 형태입니다.
+이번 미션처럼 analysis 앱 안에 @shared_task로 분석 직원을 만들어 두면, 나중에 Django 대장이 "우리 회사 소속 직원들 다 모여라!"(autodiscover_tasks())라고 불렀을 때 알아서 척척 합류해서 일을 시작합니다.
+게다가 이 analysis 앱 폴더만 쏙 빼서 다른 프로젝트에 붙여 넣어도 소속을 따지지 않기 때문에 에러 없이 바로 일합니다.
+
+한눈에 보는 비교 요약구분
+가장 큰 무기어떤 상황에 어울릴까?
+@shared_task 편리함, 범용성일반적인 Django 프로젝트, 앱(App) 단위로 코드를 분리할 때
+@app.task 명확함, 통제력여러 개의 Celery 앱을 동시에 돌리거나, 100% 통제된 테스트 환경이 필요할 때
+
+## Celery Scheduling (Mission_3)
+
+### Background Run
+Celery Worker와 Beat를 백그라운드로 실행하여 스케줄링 작업이 동작하는지 확인했다.
+
+```bash
+mkdir -p logs
+
+# worker
+nohup uv run celery -A config.celery:app worker -l info > logs/celery_worker.log 2>&1 &
+
+# beat
+nohup uv run celery -A config.celery:app beat -l info > logs/celery_beat.log 2>&1 &
+
+# check
+tail -n 50 logs/celery_worker.log
+
+# Result
+[2026-02-25 18:28:00,007: INFO/MainProcess] Task analysis.tasks.run_daily_total_expense_analysis[e8c9007e-4678-480f-838f-d0bd023528d3] received
+[2026-02-25 18:28:00,152: INFO/ForkPoolWorker-8] Task analysis.tasks.run_daily_total_expense_analysis[e8c9007e-4678-480f-838f-d0bd023528d3] succeeded in 0.14415500010363758s: None
