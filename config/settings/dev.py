@@ -1,4 +1,7 @@
-from .base import * # noqa: F403
+from .base import *  # noqa: F403
 
 DEBUG = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
