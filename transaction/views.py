@@ -27,7 +27,7 @@ class TransactionListCreateView(APIView):
     def post(self, request):
         try:
             result = create_transaction(
-                user_id=request.user.id,
+                user_id=request.user.pk,
                 account_id=request.data.get('account'),
                 amount=request.data.get('amount'),
                 currency=request.data.get('currency', 'KRW'),

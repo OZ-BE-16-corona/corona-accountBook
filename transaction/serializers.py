@@ -9,3 +9,5 @@ class TransactionSerializer(serializers.ModelSerializer):
             'currency', 'transaction_type', 'memo', 'transaction_date', 'created_at'
         ]
         read_only_fields = ['transaction_id', 'category', 'created_at']
+
+

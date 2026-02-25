@@ -21,6 +21,11 @@ def create_transaction(*, user_id: int, account_id: int, amount: int, currency: 
             "matched_keyword": r.matched_keyword,
         }
 
+    try:
+        amount = int(amount)
+    except (ValueError, TypeError):
+        raise ValidationError("금액은 숫자 형식이어야 합니다.")
+
     with db_transaction.atomic():
         account = Account.objects.select_for_update().get(pk=account_id, user_id=user_id)
 
