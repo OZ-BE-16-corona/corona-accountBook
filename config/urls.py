@@ -33,8 +33,10 @@ urlpatterns = [
     path("api/transactions/", include("transaction.urls")),
     # ✅ auth (mission_2)
     path("api/auth/", include("user.urls")),
-    path("api/analysis/", include("analysis.urls")),  # ✅ 추가
+    path("api/analysis/", include("analysis.urls")),
+    path("api/notifications/", include("notification.urls")),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
