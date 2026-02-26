@@ -1,22 +1,112 @@
-# Don't Drop money, Safe Your money
 
-프로젝트 명 : 당신의 지갑을 안전하게, Don't Drop money, Safe Your money ( 돈두세요 )
+
+# 프로젝트 명 : Don't Drop money, Safe Your money (DDSY - 돈두세요)
 
 - 팀명 : 코로나(Corona)
 - 팀장 : 김병준
 - 팀원 : 김병준, 장수영, 정상운
 
-개발환경
+---
+#  0. Tech Stack
+
+## Backend
+
+```
+Framework: Django 6.0.2 / Django REST Framework 3.16.1
+
+Authentication: djangorestframework-simplejwt (JWT 기반 인증)
+
+Database: PostgreSQL (psycopg 3.3.3)
+
+Task Queue: Celery 5.3.1 (with Redis 7.2.0)
+
+Scheduler: django-celery-beat / django-celery-results
+
+Documentation: drf-spectacular (Swagger/OpenAPI 3.0)
+```
+
+## Data Analysis & Visualization
+```
+Data Processing: Pandas 3.0.1 / NumPy 2.4.2
+
+Visualization: Matplotlib 3.10.8 / Pillow 12.1.1 (이미지 처리)
+
+DevOps & Tools
+Package Manager: uv (Fast Python package installer & resolver)
+
+Server: Gunicorn / Uvicorn (ASGI/WSGI)
+
+Container: Docker 7.1.0
+
+Linting & Formatting: Ruff 0.15.1
+
+Git Hooks: pre-commit 4.5.1
+
+```
+---
+
+# 0-1. Development Environment
 
 
-<pre style="font-size: 15px;">
-- IDEA : PyCham
-- API : Django Rest Framework
-- Deploy : Docker
-- CI / CD : GitHub Actions
-- Version Manage : UV
-- DB : PostgreSQL
-</pre>
+## Requirements
+```
+Python: 3.12+ (uv 기반 환경 권장)
+
+Database: PostgreSQL
+
+Cache/Broker: Redis
+```
+
+
+Environment Variables (.env)
+- 프로젝트 루트에 .env 파일을 생성하고 다음 설정을 추가해야 합니다.
+
+코드 스니펫
+```
+DEBUG=True
+SECRET_KEY=your_django_secret_key
+DATABASE_URL=postgres://user:password@localhost:5432/db_name
+REDIS_URL=redis://localhost:6379/0
+```
+
+3. Setup & Installation
+uv를 사용하는 경우 (권장):
+
+```Bash
+# 가상환경 생성 및 패키지 설치
+uv sync
+
+# 가상환경 활성화 (Windows)
+.venv\Scripts\activate
+# 가상환경 활성화 (macOS/Linux)
+source .venv/bin/activate
+# pre-commit 설치
+pre-commit install
+```
+4. Running the Project
+```Bash
+# 데이터베이스 마이그레이션
+python manage.py migrate
+
+# 서버 실행 (Uvicorn)
+python manage.py runserver
+
+# Celery Worker 실행
+celery -A corona_account_book worker -l info
+
+# Celery Beat 실행 (스케줄러)
+celery -A corona_account_book beat -l info
+````
+---
+## Code Quality Control
+
+본 프로젝트는 일관된 코드 스타일 유지와 버그 예방을 위해 다음 도구들을 사용합니다.
+
+- Ruff: Python Linting 및 Formatting (매우 빠른 성능)
+
+- Pre-commit: 커밋 전 자동으로 Linting 및 스타일 체크 수행
+
+---
 
 # 0. ERD
 ![account_book_ERD (2).png](account_book_ERD%20%282%29.png)
