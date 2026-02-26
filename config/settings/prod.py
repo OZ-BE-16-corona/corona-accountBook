@@ -1,5 +1,12 @@
 from .base import *  # noqa: F403
+from .base import BASE_DIR
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
