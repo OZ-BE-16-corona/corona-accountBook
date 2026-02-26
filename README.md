@@ -245,7 +245,6 @@ Refresh Token이 만료되었거나 검증되지 못하면
 
 ## 인증 플로우차트
 
-![img_1.png](img_1.png)
 ```mermaid
 flowchart TD
     S([Start]) --> A{사용자 행동 선택}
