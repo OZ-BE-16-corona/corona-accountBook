@@ -1,22 +1,112 @@
-# Don't Drop money, Safe Your money
 
-프로젝트 명 : 당신의 지갑을 안전하게, Don't Drop money, Safe Your money ( 돈두세요 )
+
+# 프로젝트 명 : Don't Drop money, Safe Your money (DDSY - 돈두세요)
 
 - 팀명 : 코로나(Corona)
 - 팀장 : 김병준
 - 팀원 : 김병준, 장수영, 정상운
 
-개발환경
+---
+#  0. Tech Stack
+
+## Backend
+
+```
+Framework: Django 6.0.2 / Django REST Framework 3.16.1
+
+Authentication: djangorestframework-simplejwt (JWT 기반 인증)
+
+Database: PostgreSQL (psycopg 3.3.3)
+
+Task Queue: Celery 5.3.1 (with Redis 7.2.0)
+
+Scheduler: django-celery-beat / django-celery-results
+
+Documentation: drf-spectacular (Swagger/OpenAPI 3.0)
+```
+
+## Data Analysis & Visualization
+```
+Data Processing: Pandas 3.0.1 / NumPy 2.4.2
+
+Visualization: Matplotlib 3.10.8 / Pillow 12.1.1 (이미지 처리)
+
+DevOps & Tools
+Package Manager: uv (Fast Python package installer & resolver)
+
+Server: Gunicorn / Uvicorn (ASGI/WSGI)
+
+Container: Docker 7.1.0
+
+Linting & Formatting: Ruff 0.15.1
+
+Git Hooks: pre-commit 4.5.1
+
+```
+---
+
+# 0-1. Development Environment
 
 
-<pre style="font-size: 15px;">
-- IDEA : PyCham
-- API : Django Rest Framework
-- Deploy : Docker
-- CI / CD : GitHub Actions
-- Version Manage : UV
-- DB : PostgreSQL
-</pre>
+## Requirements
+```
+Python: 3.12+ (uv 기반 환경 권장)
+
+Database: PostgreSQL
+
+Cache/Broker: Redis
+```
+
+
+Environment Variables (.env)
+- 프로젝트 루트에 .env 파일을 생성하고 다음 설정을 추가해야 합니다.
+
+코드 스니펫
+```
+DEBUG=True
+SECRET_KEY=your_django_secret_key
+DATABASE_URL=postgres://user:password@localhost:5432/db_name
+REDIS_URL=redis://localhost:6379/0
+```
+
+3. Setup & Installation
+uv를 사용하는 경우 (권장):
+
+```Bash
+# 가상환경 생성 및 패키지 설치
+uv sync
+
+# 가상환경 활성화 (Windows)
+.venv\Scripts\activate
+# 가상환경 활성화 (macOS/Linux)
+source .venv/bin/activate
+# pre-commit 설치
+pre-commit install
+```
+4. Running the Project
+```Bash
+# 데이터베이스 마이그레이션
+python manage.py migrate
+
+# 서버 실행 (Uvicorn)
+python manage.py runserver
+
+# Celery Worker 실행
+celery -A corona_account_book worker -l info
+
+# Celery Beat 실행 (스케줄러)
+celery -A corona_account_book beat -l info
+````
+---
+## Code Quality Control
+
+본 프로젝트는 일관된 코드 스타일 유지와 버그 예방을 위해 다음 도구들을 사용합니다.
+
+- Ruff: Python Linting 및 Formatting (매우 빠른 성능)
+
+- Pre-commit: 커밋 전 자동으로 Linting 및 스타일 체크 수행
+
+---
 
 # 0. ERD
 ![account_book_ERD (2).png](account_book_ERD%20%282%29.png)
@@ -269,48 +359,36 @@ flowchart TD
     A -->|로그아웃| O1[클라이언트 토큰 삭제]
     O1 --> O2[서버 성공 응답]
     O2 --> E
+```
 
-app.task vs shared_task 차이 (핵심만)
+---
+
+# 5. Celery 
+
+## app.task vs shared_task 차이
 
 @app.task
 
-특정 Celery 앱 인스턴스(celery_app)에 직접 등록됨.
+- 특정 : Celery 앱 인스턴스(celery_app)에 직접 등록된다.
 
-프로젝트가 “앱 인스턴스 1개”로 고정이고, 명시적으로 관리하고 싶을 때 좋음.
+- 프로젝트가 “앱 인스턴스 1개”로 고정이고, 명시적으로 관리하고 싶을 때 좋다.
 
 @shared_task
 
-“현재 로딩된 Celery 앱”에 자동으로 붙는 재사용 가능한 task.
+- “현재 로딩된 Celery 앱”에 자동으로 붙는 재사용 가능한 task.
 
-Django에서 autodiscover_tasks()랑 궁합이 좋아서, 각 앱(analysis/tasks.py)에 task 넣기 편함.
+- Django에서 autodiscover_tasks()랑 궁합이 좋아서, 각 앱(analysis/tasks.py)에 task 넣기 편하다.
 
-그래서 보통 Django 프로젝트에서는 shared_task를 더 많이 씀.
+## 정리
+@app.task
+- 명확함, 통제력여러 개의 Celery 앱을 동시에 돌리거나, 100% 통제된 테스트 환경이 필요할 때
 
-이번 미션처럼 “analysis 앱에 tasks.py 만들어서 자동 등록”이 목표면 shared_task가 적합.
 
-1. @app.task = "A회사 전속 계약 직원"
-이 직원은 **"나는 무조건 A회사(특정 Celery 앱)에서만 일할 거야!"**라고 도장을 찍은 직원입니다.
+@shared_task 
+- 편리함, 범용성일반적인 Django 프로젝트, 앱(App) 단위로 코드를 분리할 때
 
-특징: 소속이 아주 명확합니다.
-
-아쉬운 점: 만약 이 직원이 하는 일(코드)을 그대로 복사해서 다른 B회사(다른 프로젝트)로 가져가면? 직원은 "A회사 아니면 일 안 해요!"라며 파업(에러)을 일으킵니다. 앱이 하나뿐인 아주 단순한 구조일 때만 쓰기 좋습니다.
-
-2. @shared_task = "능력 있는 프리랜서 (공용 직원)"  (Django 필수!)
-이 직원은 **"어느 회사든, 지금 문 열고 영업 중인 곳(현재 로딩된 Celery 앱)이면 어디서든 일할 수 있습니다!"**라고 하는 아주 유연한 직원입니다.
-
-특징: 소속을 딱히 따지지 않아서 재사용하기가 엄청나게 좋습니다.
-
-Django와 찰떡인 이유:
-Django는 하나의 큰 프로젝트 안에 여러 개의 작은 앱(users, analysis, payments 등)이 모여있는 형태입니다.
-이번 미션처럼 analysis 앱 안에 @shared_task로 분석 직원을 만들어 두면, 나중에 Django 대장이 "우리 회사 소속 직원들 다 모여라!"(autodiscover_tasks())라고 불렀을 때 알아서 척척 합류해서 일을 시작합니다.
-게다가 이 analysis 앱 폴더만 쏙 빼서 다른 프로젝트에 붙여 넣어도 소속을 따지지 않기 때문에 에러 없이 바로 일합니다.
-
-한눈에 보는 비교 요약구분
-가장 큰 무기어떤 상황에 어울릴까?
-@shared_task 편리함, 범용성일반적인 Django 프로젝트, 앱(App) 단위로 코드를 분리할 때
-@app.task 명확함, 통제력여러 개의 Celery 앱을 동시에 돌리거나, 100% 통제된 테스트 환경이 필요할 때
-
-## Celery Scheduling (Mission_3)
+---
+# Celery Scheduling
 
 ### Background Run
 Celery Worker와 Beat를 백그라운드로 실행하여 스케줄링 작업이 동작하는지 확인했다.
@@ -330,3 +408,156 @@ tail -n 50 logs/celery_worker.log
 # Result
 [2026-02-25 18:28:00,007: INFO/MainProcess] Task analysis.tasks.run_daily_total_expense_analysis[e8c9007e-4678-480f-838f-d0bd023528d3] received
 [2026-02-25 18:28:00,152: INFO/ForkPoolWorker-8] Task analysis.tasks.run_daily_total_expense_analysis[e8c9007e-4678-480f-838f-d0bd023528d3] succeeded in 0.14415500010363758s: None
+```
+---
+# API SPEC
+
+---
+# 1. 인증 및 회원 관리 (User)
+## 1-1. 회원가입
+엔드포인트: POST /api/users/signup/
+
+설명: 새로운 사용자를 등록합니다. (비밀번호 최소 8자, 이메일/유저명 중복 체크)
+
+Request Body:
+
+```JSON
+{
+  "email": "user@example.com",
+  "user_name": "test",
+  "password": "password1234"
+}
+```
+Response (201 Created):
+
+```JSON
+{
+  "email": "user@example.com",
+  "user_name": "test"
+}
+```
+
+## 1-2. 로그인 & 로그아웃
+로그인: POST /api/users/login/
+
+Request body: 
+```JSON
+{
+  "email": "user@example.com",
+  "password": "password1234"
+}
+```
+성공 시 세션 또는 JWT 토큰 반환.
+
+로그아웃: POST /api/users/logout/
+
+설명: 현재 세션을 종료합니다.
+
+## 1-3. 프로필 관리
+엔드포인트: GET, PATCH /api/users/me/ (또는 /api/users/<int:user_id>/)
+
+설명: 회원 정보를 조회하거나 닉네임(user_name)을 수정합니다.
+
+Response (GET):
+
+```JSON
+{
+  "user_id": 1,
+  "email": "user@example.com",
+  "user_name": "test",
+  "created_at": "2026-02-24T13:00:00",
+  "updated_at": "2026-02-24T13:00:00"
+}
+```
+# 2. 계좌 관리 (Account)
+## 2-1. 계좌 생성 및 목록
+엔드포인트: POST /api/accounts/account/, GET /api/accounts/
+
+Request Body (POST):
+
+```JSON
+{
+  "account_name": "생활비 통장",
+  "type": "입출금통장",
+  "bank_code": "004",
+  "currency": "KRW"
+}
+```
+Response (201 Created):
+
+```JSON
+{
+  "account_id": 1,
+  "account_name": "생활비 통장",
+  "type": "입출금통장",
+  "bank_code": "004",
+  "currency": "KRW",
+  "balance": 0,
+  "is_active": true,
+  "created_at": "2026-02-24T13:00:00"
+}
+```
+# 3. 거래 내역 (Transaction)
+## 3-1. 거래 내역 생성 (가장 중요)
+엔드포인트: POST /api/transactions/transaction/
+
+설명: 소비/수입 내역을 기록하며, 해당 계좌의 잔액을 자동으로 업데이트합니다.
+
+Request Body:
+
+```JSON
+{
+  "account": 1,
+  "amount": 1500.00,
+  "currency": "KRW",
+  "transaction_type": "지출",
+  "memo": "CU 편의점",
+  "transaction_date": "2026-02-24"
+}
+```
+Response:
+
+```JSON
+{
+  "transaction_id": 101,
+  "account": 1,
+  "category": 3,
+  "amount": 1500.00,
+  "currency": "KRW",
+  "transaction_type": "지출",
+  "memo": "CU 편의점",
+  "transaction_date": "2026-02-24",
+  "created_at": "2026-02-24T15:00:00"
+}
+```
+# 4. 알림 및 분석 (Notification & Analysis)
+## 4-1. 알림 목록/상세 조회
+엔드포인트: GET /api/notifications/
+
+설명: is_read 상태와 read_at 시간을 포함한 알림 리스트를 조회합니다.
+
+## 4-2. 소비 패턴 분석 조회
+엔드포인트: GET /api/analysis/
+
+설명: 기간별 소비 분석 결과와 그래프 이미지를 반환합니다.
+
+Response:
+
+```JSON
+{
+  "id": 5,
+  "about": "2월 소비 리포트",
+  "type": "monthly",
+  "period_start": "2026-02-01",
+  "period_end": "2026-02-28",
+  "description": "식비 지출이 전체의 40%를 차지합니다.",
+  "image_url": "https://cdn.corona-account.com/media/analysis/chart_05.png",
+  "created_at": "2026-02-26T10:00:00"
+}
+```
+# 5. 유틸리티 (Count API)
+계좌 개수: GET /api/accounts/count/ -> {"total": 3}
+
+거래 개수: GET /api/transactions/count/ -> {"total": 150}
+
+알림 개수: GET /api/notifications/count/ -> {"total": 5}
