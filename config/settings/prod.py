@@ -3,7 +3,7 @@ from .base import BASE_DIR
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
